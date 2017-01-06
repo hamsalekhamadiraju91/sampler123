@@ -76,6 +76,8 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 
 
 	private URL rallyURL;
+	private String apikey;
+	
 	
 	//Not implemented
 	public String getBugDeepLink(String arg0) {   
@@ -161,16 +163,21 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	}
 	
 	public List<BugTrackerConfig> getConfiguration() {
-
-//		BugTrackerConfig bugTrackerConfig = new BugTrackerConfig()
-//				.setIdentifier("Rally Plugin")
-//				.setDisplayLabel("Rally URL Prefix")
-//				.setDescription("Rally URL prefix")
-//				.setRequired(true);
+//		List<BugTrackerConfig> configs = Arrays.asList();
+		BugTrackerConfig bugTrackerConfig = new BugTrackerConfig()
+				.setIdentifier("Rally Plugin")
+				.setDisplayLabel("Rally URL Prefix")
+				.setDescription("Rally URL prefix")
+				.setRequired(true);
+		BugTrackerConfig bugTrackerConfig1 = new BugTrackerConfig()
+				.setIdentifier("Rally ApiKey")
+				.setDescription("Api key")
+				.setDisplayLabel("API key")
+				.setRequired(true);
 	
 
-		List<BugTrackerConfig> configs = Arrays.asList();
-	//	pluginHelper.populateWithDefaultsIfAvailable(configs);
+		List<BugTrackerConfig> configs = Arrays.asList(bugTrackerConfig,bugTrackerConfig1);
+		pluginHelper.populateWithDefaultsIfAvailable(configs);
 		return configs;
 	}
 
@@ -183,7 +190,7 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 
 	public String getShortDisplayName() {
 		// TODO Auto-generated method stub
-		return "Rally Plugin For SSC";
+		return "Rally_ravi";
 	}
 
 	
@@ -219,6 +226,10 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 		try {
 			rallyURL = new URL(url);
 			rallyURL.toURI();
+			apikey = config.get(rallyAPIKey);
+			restApi = new RallyRestApi(new URI(rallyURL.toString()),apikey);
+			restApi.setApplicationVersion("v2.0");
+			restApi.setApplicationName("Rally Community");
 			if (rallyURL.getHost().length() == 0) {
 				throw new BugTrackerException("Rally URL host should not be empty");
 			}
