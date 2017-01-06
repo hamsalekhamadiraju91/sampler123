@@ -1,14 +1,13 @@
 package com.fortify.pub.bugtracker.plugin;
 
 
-
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
 import java.util.Arrays;
-
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +22,9 @@ import com.fortify.pub.bugtracker.support.BugTrackerConfig;
 import com.fortify.pub.bugtracker.support.BugTrackerException;
 import com.fortify.pub.bugtracker.support.IssueDetail;
 import com.fortify.pub.bugtracker.support.UserAuthenticationStore;
-
+import com.j2bugzilla.base.BugFactory;
 import com.j2bugzilla.rpc.GetBug;
+import com.j2bugzilla.rpc.ReportBug;
 import com.rallydev.rest.RallyRestApi;
 
 
@@ -37,7 +37,7 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
     
     
     
-    
+    //implement according to Rally plugin
     
 	public Bug fetchBugDetails(String bugID, UserAuthenticationStore rallyCredentials) {
 		final GetBug getBug = new GetBug(Integer.parseInt(bugID));
@@ -50,10 +50,30 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	}
 
 	public Bug fileBug(BugSubmission bug, UserAuthenticationStore rallyCredentials) {
+		BugFactory factory = new BugFactory();
+		com.j2bugzilla.base.Bug dtoBug = factory.createBug(getPostDataStrMap(bug.getParams()));
+		final ReportBug reportBug = new ReportBug(dtoBug);
+		
+		
            Bug b =new Bug("Bug1","NEW");
             return b;
 	}
 	
+
+	private Map<String, Object> getPostDataStrMap(Map<String, String> paramList) {
+		final Map<String, Object> result = new HashMap<String, Object>();
+		for (Map.Entry<String, String> p : paramList.entrySet()) {
+			result.put(p.getKey(), p.getValue());
+		}
+		result.put("comment", paramList.get("description"));
+        String summary = paramList.get("summary");
+        if (summary != null && summary.length() > 255) {
+            summary = summary.substring(0, 255);
+        }
+		result.put("short_desc", summary);
+		return result;
+	}
+
 
 	private URL rallyURL;
 	
@@ -142,14 +162,15 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	
 	public List<BugTrackerConfig> getConfiguration() {
 
-		BugTrackerConfig bugTrackerConfig = new BugTrackerConfig()
-				.setIdentifier("Rally Plugin")
-				.setDisplayLabel("Rally URL Prefix")
-				.setDescription("Rally URL prefix")
-				.setRequired(true);
+//		BugTrackerConfig bugTrackerConfig = new BugTrackerConfig()
+//				.setIdentifier("Rally Plugin")
+//				.setDisplayLabel("Rally URL Prefix")
+//				.setDescription("Rally URL prefix")
+//				.setRequired(true);
+	
 
-		List<BugTrackerConfig> configs = Arrays.asList(bugTrackerConfig);
-		pluginHelper.populateWithDefaultsIfAvailable(configs);
+		List<BugTrackerConfig> configs = Arrays.asList();
+	//	pluginHelper.populateWithDefaultsIfAvailable(configs);
 		return configs;
 	}
 
@@ -175,7 +196,7 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	
 	public boolean requiresAuthentication() {
 		// TODO Auto-generated method stub
-		return true;
+		return false;
 	}
 
 	
