@@ -242,8 +242,9 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BatchBugTra
 	}
 
 	public Bug fileMultiIssueBug(MultiIssueBugSubmission arg0, UserAuthenticationStore credentials) {
-		// TODO Auto-generated method stub
-		return null;
+		Bug b =new Bug("Bug1","NEW");
+        return b;
+		
 	}
 
 	public List<BugParam> getBatchBugParameters(UserAuthenticationStore credentials) {
@@ -269,9 +270,8 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BatchBugTra
 		return !isBugClosed(bug, credentials);
 	}
 
-	public List<BugParam> onBatchBugParameterChange(String arg0, List<BugParam> arg1, UserAuthenticationStore credentials) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<BugParam> onBatchBugParameterChange(String arg0, List<BugParam> list, UserAuthenticationStore credentials) {
+		return list;
 	}
 
 	public void reOpenBug(Bug arg0, String arg1, UserAuthenticationStore credentials) {
