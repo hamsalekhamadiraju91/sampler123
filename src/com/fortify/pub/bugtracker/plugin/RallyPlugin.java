@@ -21,6 +21,7 @@ import com.fortify.pub.bugtracker.support.BugTrackerAuthenticationException;
 import com.fortify.pub.bugtracker.support.BugTrackerConfig;
 import com.fortify.pub.bugtracker.support.BugTrackerException;
 import com.fortify.pub.bugtracker.support.IssueDetail;
+import com.fortify.pub.bugtracker.support.MultiIssueBugSubmission;
 import com.fortify.pub.bugtracker.support.UserAuthenticationStore;
 import com.j2bugzilla.base.BugFactory;
 import com.j2bugzilla.rpc.GetBug;
@@ -29,7 +30,7 @@ import com.rallydev.rest.RallyRestApi;
 
 
 @BugTrackerPluginImplementation
-public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerPlugin {
+public class RallyPlugin extends AbstractBugTrackerPlugin implements BatchBugTrackerPlugin {
 	public static RallyRestApi restApi ;
 	static String rallyAPIKey;
 	public static final String RALLY_URL = "https://rally1.rallydev.com";
@@ -235,20 +236,46 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 //		connectToRally();
 	}
 
-//	private void connectToRally() {
-//		// TODO Auto-generated method stub
-//		if (rallyAPIKey == null) {
-//			System.out.println("Cannot proceed without Rally API Key.");
-//		}
-//		try {
-//			restApi= new RallyRestApi(new URI(RALLY_URL), rallyAPIKey);
-//		} catch (URISyntaxException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		restApi.setApplicationVersion("v2.0");
-//		restApi.setApplicationName("Rally Community");
-//		
-//	}
+	public void addCommentToBug(Bug bug, String arg1, UserAuthenticationStore credentials) {
+		// TODO Auto-generated method stub
+		
+	}
 
+	public Bug fileMultiIssueBug(MultiIssueBugSubmission arg0, UserAuthenticationStore credentials) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List<BugParam> getBatchBugParameters(UserAuthenticationStore credentials) {
+		// TODO Auto-generated method stub
+		return getBugParameters(null, credentials);
+	}
+
+	public boolean isBugClosed(Bug bug, UserAuthenticationStore credentials) {
+		// TODO Auto-generated method stub
+		return isBugClosed(bug);
+	}
+	private boolean isBugClosed(Bug bug) {
+		String status = bug.getBugStatus();
+		return "FIXED".equals(status) || "CLOSED".equals(status);
+	}
+	public boolean isBugClosedAndCanReOpen(Bug arg0, UserAuthenticationStore credentials) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public boolean isBugOpen(Bug bug, UserAuthenticationStore credentials) {
+		// TODO Auto-generated method stub
+		return !isBugClosed(bug, credentials);
+	}
+
+	public List<BugParam> onBatchBugParameterChange(String arg0, List<BugParam> arg1, UserAuthenticationStore credentials) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void reOpenBug(Bug arg0, String arg1, UserAuthenticationStore credentials) {
+		// TODO Auto-generated method stub
+		
+	}
 }
