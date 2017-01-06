@@ -87,7 +87,7 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 
 	
 	public List<BugParam> getBugParameters(IssueDetail issueDetail, UserAuthenticationStore rallyCredentials) {
-		connectToRally();
+		//connectToRally();
 		final BugParam descriptionParam = getDescriptionText(issueDetail);
 		final BugParam summaryParam = getSummaryParamText(issueDetail);
 		final BugParam issueIdParam = getIssueIdParam(issueDetail);
@@ -177,7 +177,7 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	
 
 		List<BugTrackerConfig> configs = Arrays.asList(bugTrackerConfig,bugTrackerConfig1);
-		pluginHelper.populateWithDefaultsIfAvailable(configs);
+	//	pluginHelper.populateWithDefaultsIfAvailable(configs);
 		return configs;
 	}
 
@@ -224,20 +224,21 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 		}
 
 		try {
-			rallyURL = new URL(url);
-			rallyURL.toURI();
+//			rallyURL = new URL(url);
+//			rallyURL.toURI();
+			
 			apikey = config.get(rallyAPIKey);
-			restApi = new RallyRestApi(new URI(rallyURL.toString()),apikey);
+			restApi = new RallyRestApi(new URI(RALLY_URL),apikey);
 			restApi.setApplicationVersion("v2.0");
 			restApi.setApplicationName("Rally Community");
 			if (rallyURL.getHost().length() == 0) {
 				throw new BugTrackerException("Rally URL host should not be empty");
 			}
 		} catch (URISyntaxException e) {
-			throw new BugTrackerException("Invalid Rally URL: " + url);
-		} catch (MalformedURLException e) {
-			throw new BugTrackerException("Invalid Rally URL: " + url);
-		}
+			throw new BugTrackerException("Invalid Rally URL: " + url);}
+//		} catch (MalformedURLException e) {
+//			throw new BugTrackerException("Invalid Rally URL: " + url);
+//		}
 	
 		
 
@@ -245,28 +246,28 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 
 	
 	public void testConfiguration(UserAuthenticationStore rallyCredentials) {
-		validateCredentials(rallyCredentials);
+//		validateCredentials(rallyCredentials);
 		
 	}
 
 	public void validateCredentials(UserAuthenticationStore rallyCredentials)  {
-		connectToRally();
+//		connectToRally();
 	}
 
-	private void connectToRally() {
-		// TODO Auto-generated method stub
-		if (rallyAPIKey == null) {
-			System.out.println("Cannot proceed without Rally API Key.");
-		}
-		try {
-			restApi= new RallyRestApi(new URI(RALLY_URL), rallyAPIKey);
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		restApi.setApplicationVersion("v2.0");
-		restApi.setApplicationName("Rally Community");
-		
-	}
+//	private void connectToRally() {
+//		// TODO Auto-generated method stub
+//		if (rallyAPIKey == null) {
+//			System.out.println("Cannot proceed without Rally API Key.");
+//		}
+//		try {
+//			restApi= new RallyRestApi(new URI(RALLY_URL), rallyAPIKey);
+//		} catch (URISyntaxException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		restApi.setApplicationVersion("v2.0");
+//		restApi.setApplicationName("Rally Community");
+//		
+//	}
 
 }
