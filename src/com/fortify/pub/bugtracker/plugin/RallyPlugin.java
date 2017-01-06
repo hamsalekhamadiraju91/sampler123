@@ -165,12 +165,12 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	public List<BugTrackerConfig> getConfiguration() {
 //		List<BugTrackerConfig> configs = Arrays.asList();
 		BugTrackerConfig bugTrackerConfig = new BugTrackerConfig()
-				.setIdentifier("Rally Plugin")
+				.setIdentifier("RallyURL")
 				.setDisplayLabel("Rally URL Prefix")
 				.setDescription("Rally URL prefix")
 				.setRequired(true);
 		BugTrackerConfig bugTrackerConfig1 = new BugTrackerConfig()
-				.setIdentifier("Rally ApiKey")
+				.setIdentifier("RallyAPI")
 				.setDescription("Api key")
 				.setDisplayLabel("API key")
 				.setRequired(true);
@@ -190,7 +190,7 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 
 	public String getShortDisplayName() {
 		// TODO Auto-generated method stub
-		return "Rally_ravi";
+		return "Rally_Sample";
 	}
 
 	
@@ -209,36 +209,17 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	
 	public void setConfiguration(Map<String, String> config) throws BugTrackerAuthenticationException {
 		// TODO Auto-generated method stub
-		
-		if (config.get(RALLY_URL) == null) {
-			throw new IllegalArgumentException("Invalid configuration passed");
+		if (config.get("RallyAPI") == null) {
+			System.out.println("Cannot proceed without Rally API Key.");
 		}
-
-		String url = config.get(RALLY_URL);
-		if (!url.startsWith("http://") && !url.startsWith("https://")) {
-			throw new BugTrackerException("Rally URL protocol should be either http or https");
-		}
-
-		if (url.endsWith("/")) {
-			url = url.substring(0,url.length()-1);
-		}
-
 		try {
-//			rallyURL = new URL(url);
-//			rallyURL.toURI();
-			
-			apikey = config.get(rallyAPIKey);
-			restApi = new RallyRestApi(new URI(RALLY_URL),apikey);
-			restApi.setApplicationVersion("v2.0");
-			restApi.setApplicationName("Rally Community");
-			if (rallyURL.getHost().length() == 0) {
-				throw new BugTrackerException("Rally URL host should not be empty");
-			}
+			restApi= new RallyRestApi(new URI(config.get("RallyURL")), config.get("RallyAPI"));
 		} catch (URISyntaxException e) {
-			throw new BugTrackerException("Invalid Rally URL: " + url);}
-//		} catch (MalformedURLException e) {
-//			throw new BugTrackerException("Invalid Rally URL: " + url);
-//		}
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		restApi.setApplicationVersion("v2.0");
+		restApi.setApplicationName("Rally Community");
 	
 		
 
