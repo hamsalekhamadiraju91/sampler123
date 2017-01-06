@@ -2,16 +2,13 @@ package com.fortify.pub.bugtracker.plugin;
 
 
 
-import static com.fortify.pub.bugtracker.support.BugTrackerPluginConstants.DISPLAY_ONLY_SUPPORTED_VERSION;
-import static com.fortify.sample.bugtracker.bugzilla.BugzillaPluginConstants.BUGZILLA_URL_NAME;
-import static com.fortify.sample.bugtracker.bugzilla.BugzillaPluginConstants.SUPPORTED_VERSIONS;
-
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
+
 import java.util.Arrays;
+
 import java.util.List;
 import java.util.Map;
 
@@ -19,14 +16,15 @@ import com.fortify.pub.bugtracker.plugin.BugTrackerPlugin;
 import com.fortify.pub.bugtracker.support.Bug;
 import com.fortify.pub.bugtracker.support.BugParam;
 import com.fortify.pub.bugtracker.support.BugParamText;
-import com.fortify.pub.bugtracker.support.BugParamTextArea;
+
 import com.fortify.pub.bugtracker.support.BugSubmission;
 import com.fortify.pub.bugtracker.support.BugTrackerAuthenticationException;
 import com.fortify.pub.bugtracker.support.BugTrackerConfig;
 import com.fortify.pub.bugtracker.support.BugTrackerException;
 import com.fortify.pub.bugtracker.support.IssueDetail;
 import com.fortify.pub.bugtracker.support.UserAuthenticationStore;
-import com.google.gson.JsonObject;
+
+import com.j2bugzilla.rpc.GetBug;
 import com.rallydev.rest.RallyRestApi;
 
 
@@ -35,20 +33,34 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	public static RallyRestApi restApi ;
 	static String rallyAPIKey;
 	public static final String RALLY_URL = "https://rally1.rallydev.com";
-
-	public Bug fetchBugDetails(String arg0, UserAuthenticationStore rallyCredentials) {
-	    return null;
+    String bugDeepLink;
+    
+    
+    
+    
+    
+	public Bug fetchBugDetails(String bugID, UserAuthenticationStore rallyCredentials) {
+		final GetBug getBug = new GetBug(Integer.parseInt(bugID));
+		try{
+		com.j2bugzilla.base.Bug dtoBug = getBug.getBug();
+		return new Bug(String.valueOf(dtoBug.getID()), dtoBug.getStatus(), dtoBug.getResolution());
+	} catch (Exception e) {
+		throw new BugTrackerException("The bug status could not be fetched correctly", e);
+	}
 	}
 
-	public Bug fileBug(BugSubmission arg0, UserAuthenticationStore rallyCredentials) {
-
-		return null;
+	public Bug fileBug(BugSubmission bug, UserAuthenticationStore rallyCredentials) {
+           Bug b =new Bug("Bug1","NEW");
+            return b;
 	}
+	
 
 	private URL rallyURL;
-	public String getBugDeepLink(String arg0) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	//Not implemented
+	public String getBugDeepLink(String arg0) {   
+		bugDeepLink = RALLY_URL;
+		return bugDeepLink;
 	}
 
 	
@@ -58,12 +70,18 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 		final BugParam summaryParam = getSummaryParamText(issueDetail);
 		final BugParam issueIdParam = getIssueIdParam(issueDetail);
 		final BugParam issueLineNoParam= getIssueLineNoParam(issueDetail);
-		
+		final BugParam projectNameParam= getProjectNameParam(issueDetail);
+	
 
-		return Arrays.asList(summaryParam, descriptionParam,issueIdParam,issueLineNoParam);
+		return Arrays.asList(summaryParam, descriptionParam,issueIdParam,issueLineNoParam,projectNameParam);
 	}
 	
 	
+	private BugParam getProjectNameParam(IssueDetail issueDetail) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private BugParam getIssueLineNoParam(IssueDetail issueDetail) {
 		final BugParam issueLineNoParam = new BugParamText()
 				.setIdentifier("Issue Line Number")
@@ -123,12 +141,6 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	}
 	
 	public List<BugTrackerConfig> getConfiguration() {
-//		final BugTrackerConfig supportedVersions = new BugTrackerConfig()
-//                .setIdentifier(DISPLAY_ONLY_SUPPORTED_VERSION)
-//                .setDisplayLabel("Supported Versions")
-//                .setDescription("Bug Tracker versions supported by the plugin")
-//                .setValue(SUPPORTED_VERSIONS)
-//                .setRequired(false);
 
 		BugTrackerConfig bugTrackerConfig = new BugTrackerConfig()
 				.setIdentifier("Rally Plugin")
@@ -136,7 +148,7 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 				.setDescription("Rally URL prefix")
 				.setRequired(true);
 
-		List<BugTrackerConfig> configs = Arrays.asList(supportedVersions, bugTrackerConfig);
+		List<BugTrackerConfig> configs = Arrays.asList(bugTrackerConfig);
 		pluginHelper.populateWithDefaultsIfAvailable(configs);
 		return configs;
 	}
@@ -154,10 +166,10 @@ public class RallyPlugin extends AbstractBugTrackerPlugin implements BugTrackerP
 	}
 
 	
-	public List<BugParam> onParameterChange(IssueDetail arg0, String arg1, List<BugParam> arg2,
-			UserAuthenticationStore arg3) {
+	public List<BugParam> onParameterChange(IssueDetail issueDetail, String changedParamIdentifier, List<BugParam> currentValues,
+			UserAuthenticationStore rallyCredentials) {
 		// TODO Auto-generated method stub
-		return null;
+		return currentValues;
 	}
 
 	
