@@ -41,10 +41,10 @@
   		<artifactId>fortify-public</artifactId>
   		<version>4.21</version>
   	</dependency>
-  	<dependency>
+  <!-- 	<dependency>
   		<groupId>com.fortify.pub.bugtracker</groupId>
   		<artifactId>j2bugzilla</artifactId>
   		<version>2.3</version>
-  	</dependency>
+  	</dependency> -->
   </dependencies>
 </project>
