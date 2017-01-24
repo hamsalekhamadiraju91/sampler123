@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,11 +32,8 @@ import com.fortify.pub.bugtracker.support.MultiIssueBugSubmission;
 import com.fortify.pub.bugtracker.support.UserAuthenticationStore;
 
 
-
-
-
 @BugTrackerPluginImplementation
-public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements BatchBugTrackerPlugin{
+public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements BatchBugTrackerPlugin{
 	
 	private static final Log LOG = LogFactory.getLog(Rally4BugTrackerPlugin.class);
 	private static final String PARAM_SUMMARY = "summary";
@@ -44,6 +42,8 @@ public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements 
 	private static final String RALLY_WORKSPACE = "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/37692205281" ;
 	private Map<String, String> configValues = new HashMap<String, String>();
 	
+	String instanceId;
+	String issueType;
 	
 	//FetchDetails to be implemented ~ createDefect
 	public Bug fetchBugDetails(String bugId, UserAuthenticationStore credentials) {
@@ -59,7 +59,7 @@ public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements 
 				LOG.error(e);
 			}
 			
-		} catch (final RemoteException e) {
+		} catch (final Exception e) {
 			LOG.info("Rally Error fetchBugDetails",e);
 			throw new BugTrackerException("Rally Error fetchBugDetails", e);
 			
@@ -72,55 +72,42 @@ public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements 
 	}
 
 	public Bug fileBug(BugSubmission bug, UserAuthenticationStore credentials) {
-		try {
-			return fileBug(bug.getParams(), credentials);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			LOG.error(e);
-		}
-	return null;
+	//	IssueDetail issue = bug.getIssueDetail();
+	//	instanceId = issue.getIssueInstanceId();
+		issueType = "Name of the issue";
 		
+		return fileBug(bug.getParams(), credentials);
+				
+			
 	}
 
-	private Bug fileBug(Map<String, String> params, UserAuthenticationStore credentials) throws IOException {
+	private Bug fileBug(Map<String, String> params, UserAuthenticationStore credentials) {
 		
 		Bug retval = null;
 		Rally4PluginConnection connection = null;
-		try {
+		
 			connection = getReusableConnection(credentials);
-			retval = connection.createNewIssue(params.get("Rally_Project"), params.get("Rally_WorkSpace"), params.get(PARAM_DESCRIPTION),
-					params.get(INSTANCE_ID),params.get(PARAM_SUMMARY));
-
-		} catch (final RemoteException e) {
-			LOG.info("Rally Error fileBug",e);
-			String errorMessage = "Test Error message";
-			
-//			errorMessage = errorMessage.replaceFirst("^([^\\w]|[\\s])*", "");
-//			errorMessage = errorMessage.replaceFirst("([^\\w]|[\\s])*$", "");
-			
-			if (errorMessage.length() == 0) {
-				errorMessage = "Unknown error while trying to file a bug.";
+            try {
+            	LOG.error("This is before createNewIssue---------------------------->" +params.values());
+				retval = connection.createNewIssue(configValues.get("Rally_Project"),configValues.get("Rally_WorkSpace"), configValues.get("Rally_DefectSuite"),
+						configValues.get("Rally_API"), configValues.get("Rally_URL"), INSTANCE_ID, params.get(PARAM_DESCRIPTION), "Issue Title");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				LOG.error("This is logs error for fileBug" +configValues.get("Rally_Workspace"));
 			}
-			
-			throw new BugTrackerException(errorMessage, e);
-		} finally {
 			if (connection != null) {
 				connection.closeRallyConnection();
 			}
+			return retval;
 		}
-		return retval;
-	}
-
+		
 	public String getBugDeepLink(String issueID) {
-//		final StringBuilder sb = new StringBuilder(configValues.get("Rally_URL"));
-//		if (sb.charAt(sb.length() - 1) != '/') {
-//			sb.append('/');
-//		}
 		return configValues.get("Rally_URL");
 	}
 	
 	
 	//IsuueDetail has information on defect 
+
 
 	public List<BugParam> getBugParameters(IssueDetail issueDetail, UserAuthenticationStore credentials) {
 		final List<BugParam> initialFields = new ArrayList<BugParam>();
@@ -147,7 +134,7 @@ public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements 
 			if (issueDetail == null) {
 				descriptionParam = descriptionParam.setValue("Issue Ids: $ATTRIBUTE_INSTANCE_ID$\n$ISSUE_DEEPLINK$");
 			} else {
-				descriptionParam.setValue(pluginHelper.buildDefaultBugDescription(issueDetail, true));
+				descriptionParam.setValue(issueDetail.getDescription());
 			}
 			initialFields.add(descriptionParam);
 			
@@ -157,14 +144,39 @@ public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements 
 					.setRequired(true)
 					.setDescription("Issue unique Instance ID");
 			if (issueDetail == null) {
-				instanceID = instanceID.setValue("Issue Ids: $ATTRIBUTE_INSTANCE_ID$\n$ISSUE_DEEPLINK$");
+				instanceID = instanceID.setValue("$ATTRIBUTE_INSTANCE_ID");
 			} else {
-				instanceID = instanceID.setValue(issueDetail.getIssueInstanceId());
+				instanceID = instanceID.setValue("$ATTRIBUTE_INSTANCE_ID");
 			}
 			initialFields.add(instanceID);
+			
+			BugParam rallyWorkspace = new BugParamText()
+					.setIdentifier("Rally_Workspace")
+					.setDescription("Rally Workspace")
+					.setRequired(true)
+					.setDisplayLabel("Rally Workspace")
+					.setValue(configValues.get("Rally_WorkSpace"));
+			initialFields.add(rallyWorkspace);
+			
+			BugParam rallyProject = new BugParamText()
+					.setIdentifier("Rally_Project")
+					.setDescription("Rally Project")
+					.setRequired(true)
+					.setDisplayLabel("Rally Project")
+			        .setValue(configValues.get("Rally_Project"));
+			initialFields.add(rallyProject);
+			
+			BugParam rallyDS = new BugParamText()
+					.setIdentifier("Rally_DefectSuite")
+					.setDescription("Rally Defect Suite ID")
+					.setRequired(true)
+					.setDisplayLabel("Rally DefectSuite")
+			        .setValue(configValues.get("Rally_DefectSuite"));
+			initialFields.add(rallyDS);
+ 
+ 
 
-
-		} catch (final RemoteException e) {
+		} catch (final Exception e) {
 			LOG.info("Rally Error getBugParameters",e);
 			throw new BugTrackerException("Error in RallyBugTracker", e);
 		} finally {
@@ -176,7 +188,7 @@ public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements 
 		return initialFields;
 	}
 	
-	private Rally4PluginConnection getReusableConnection(UserAuthenticationStore credentials) throws RemoteException {
+	private Rally4PluginConnection getReusableConnection(UserAuthenticationStore credentials) {
 		try {
 			return new Rally4PluginConnection(configValues.get("Rally_URL"), configValues.get("Rally_API"));
 		} catch (Exception e) {
@@ -205,8 +217,8 @@ public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements 
 				.setDescription("Rally WorkSpace")
 				.setDisplayLabel("Rally WorkSpace")
 				.setIdentifier("Rally_WorkSpace")
-				.setRequired(false)
-				.setValue(RALLY_WORKSPACE);
+				.setRequired(true);
+				
 		BugTrackerConfig rallyProject = new BugTrackerConfig()
 				.setDescription("Rally Project")
 				.setDisplayLabel("Rally Project")
@@ -290,10 +302,31 @@ public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements 
 		
 	}
 
-	public Bug fileMultiIssueBug(MultiIssueBugSubmission arg0, UserAuthenticationStore arg1) {
-		// TODO Auto-generated method stub
-		Bug b = new Bug("Bug1","newBug");
-		return b;
+	public Bug fileMultiIssueBug(MultiIssueBugSubmission bugs, UserAuthenticationStore credentials) {
+		return fileBug(bugs.getParams(),credentials);
+////		List<IssueDetail> issueList = new ArrayList<IssueDetail>();
+////		issueList = bugs.getIssueDetails();
+////		Bug b = null;
+////		for(IssueDetail eachIssue: issueList){
+////			try {
+////				b = fileBug(eachIssue, credentials);
+////			} catch (IOException e) {
+////				// TODO Auto-generated catch block
+////				e.printStackTrace();
+////			}	
+////		}
+//		Map<String, String> issuesMap;
+//		issuesMap = bugs.getParams();
+//		Bug b = null;
+//	    try {
+//			b = fileBug(issuesMap,credentials);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		return b;
+			
 	}
 
 	public List<BugParam> getBatchBugParameters(UserAuthenticationStore credentials) {
@@ -318,7 +351,7 @@ public class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements 
 
 	public List<BugParam> onBatchBugParameterChange(String arg0, List<BugParam> arg1, UserAuthenticationStore credentials) {
 		// TODO Auto-generated method stub
-		return getBugParameters(null, credentials);
+		return null;
 	}
 
 	public void reOpenBug(Bug arg0, String arg1, UserAuthenticationStore arg2) {

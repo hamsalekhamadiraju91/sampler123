@@ -24,6 +24,8 @@ public class Rally4PluginConnection {
 	public static RallyRestApi restApi;
 	static String rallyAPIKey;
 	private static final Log LOG = LogFactory.getLog(Rally4PluginConnection.class);
+	private static final String RALLY_WORKSPACE = "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/37692205281" ;
+	private static final String RALLY_PROJECT = "https://rally1.rallydev.com/slm/webservice/v2.0/project/57403463432 ";
 	
 	
 	public Rally4PluginConnection(String rallyURL, String rallyAPI) {
@@ -52,35 +54,54 @@ public class Rally4PluginConnection {
 			}
 		
 	}
-	
-	
-	
-	
-	
-	public Bug createNewIssue(String projectKey, String workspace, String description, String id, String summary) throws IOException {
 
+	
+	public Bug createNewIssue(String rProject, String rWorkspace, String rDSId, String rAPI, String rURL, String instanceId, String description, String issueType) throws IOException {
+		LOG.error("This is inside createnew");
+		if (rURL == null) {
+			LOG.info("Cannot proceed without Rally API Key.");
+
+		}
+		try {
+			LOG.info("Connection ToTry");
+			restApi= new RallyRestApi(new URI(rURL),rAPI);
+			
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			LOG.error("Cannot connect to rally with given API Key" +e);
+		}
+		restApi.setApplicationVersion("v2.0");
+		restApi.setApplicationName("Rally Community");
+		
+		
 		JsonObject newDefect = new JsonObject();
+		newDefect.addProperty("Name", issueType);
 		newDefect.addProperty("Severity", "4 - Minor");
 		newDefect.addProperty("Description", description);
-		newDefect.addProperty("Workspace", workspace);
-		newDefect.addProperty("Project", projectKey);
+		newDefect.addProperty("Workspace", rWorkspace);
+		newDefect.addProperty("Project", rProject);
 		newDefect.addProperty("State", "Open");
-		newDefect.addProperty("ConversationPost", id);
+		newDefect.addProperty("ConversationPost", instanceId);
 		CreateRequest createRequest = new CreateRequest("defect", newDefect);
-		CreateResponse createResponse = restApi.create(createRequest);
+		CreateResponse createResponse = null;
+		try {
+			createResponse = restApi.create(createRequest);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			LOG.error("create Response failed due to following Exception" +e);
+		}
 	
 		if(!createResponse.wasSuccessful()){
 		LOG.error("Defect was not created");
 		return null;
 		}
 		else{
-		LOG.info("Created defect in Rally successfully");
+		LOG.error("Created defect in Rally successfully");
 	//	JsonObject rallyDefectObject = createResponse.getObject();
 		String rallyDefectReference = createResponse.getObject().get("FormattedID").getAsString();
-		LOG.info(String.format("Created %s", rallyDefectReference));
-		final Bug retval = fetchDetails(rallyDefectReference,workspace);
-        
-		
+		LOG.error(String.format("Created %s", rallyDefectReference));
+		Bug retval = fetchDetails(rallyDefectReference,RALLY_WORKSPACE); 
+     
 		return retval;
 	}
 		
