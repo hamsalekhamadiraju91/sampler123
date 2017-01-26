@@ -31,10 +31,10 @@ public class Rally4PluginConnection {
 	public static RallyRestApi restApi;
 	static String rallyAPIKey;
 	private static final Log LOG = LogFactory.getLog(Rally4PluginConnection.class);
-//	private static final String RALLY_WORKSPACE = "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/37692205281" ;
-//	private static final String RALLY_PROJECT = "https://rally1.rallydev.com/slm/webservice/v2.0/project/57403463432 ";
+
 	public String rallyDefectID;
 	 public static JsonObject SCAObj;
+	 String defaultTag = "SCA";
 	
 	public Rally4PluginConnection(String rallyURL, String rallyAPI) {
 		// TODO Auto-generated constructor stub
@@ -130,9 +130,13 @@ public class Rally4PluginConnection {
 		
 		String rallySeverity = null;
 		JsonArray tagsArray;
-		
-		
-		
+		 
+		String[] descrptionP = description.split("]");
+		//String newLine = System.lineSeparator();
+		String str = "";
+		for(int i=0; i <descrptionP.length; i++){
+			str += descrptionP[i]+"<br><br>";
+		}
 		LOG.error("This is fortifyseverity" +fortifySeverity);
 		if(fortifySeverity.equalsIgnoreCase("[Critical]")){
 			rallySeverity = "1 - Catastrophic";
@@ -151,9 +155,10 @@ public class Rally4PluginConnection {
 		}
 		
 		JsonObject newDefect = new JsonObject();
-		newDefect.addProperty("Name", issueType);
+		newDefect.addProperty("Name", issueType.replace("[", "").replace("]","")+defaultTag);
+		
 		newDefect.addProperty("Severity", rallySeverity);
-		newDefect.addProperty("Description", description);
+		newDefect.addProperty("Description", str.replace("[", "").replace("]",""));
 		newDefect.addProperty("Workspace", rWorkspace);
 		newDefect.addProperty("Project", rProject);
 		newDefect.addProperty("State", "Open");
@@ -173,19 +178,16 @@ public class Rally4PluginConnection {
 		}
 		else{
 		LOG.error("Created defect in Rally successfully");
-	//	JsonObject rallyDefectObject = createResponse.getObject();
 		String rallyDefectReference = createResponse.getObject().get("FormattedID").getAsString();
         JsonObject defectObj = createResponse.getObject();
 		 String fullDefectAPIURL=createResponse.getObject().get("_ref").getAsString();
          String [] tmp1=fullDefectAPIURL.split("/");
          int tmplen=tmp1.length;
          rallyDefectID=tmp1[tmplen-1];
-         
-	//	JsonObject defectsuiteObj = addDefectToDefectSuite(createResponse.getObject(), rWorkspace,rProject,rDSId);
 		
-		JsonObject tagRefObject = tagExists("SCA",rWorkspace, rProject );
+		JsonObject tagRefObject = tagExists(defaultTag,rWorkspace, rProject );
 	      if(tagRefObject == null){
-		 SCAObj = createTag("SCA", rWorkspace, rProject);
+		 SCAObj = createTag(defaultTag, rWorkspace, rProject);
 	      }
 	      else{
 	    	  SCAObj = tagRefObject;
