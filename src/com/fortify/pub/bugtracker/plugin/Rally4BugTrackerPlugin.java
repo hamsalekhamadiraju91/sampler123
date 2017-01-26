@@ -17,7 +17,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 import com.fortify.pub.bugtracker.support.Bug;
 import com.fortify.pub.bugtracker.support.BugParam;
 import com.fortify.pub.bugtracker.support.BugParamChoice;
@@ -39,9 +38,11 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 	private static final String PARAM_SUMMARY = "summary";
 	private static final String PARAM_DESCRIPTION = "description";
 	private static final String INSTANCE_ID = "defectId";
+	private static final String SEVERITY = "severity";
 	private static final String RALLY_WORKSPACE = "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/37692205281" ;
 	private Map<String, String> configValues = new HashMap<String, String>();
-	
+	public final static String RALLY_DEFECT_DEEP_LINK_URL_FORMAT="https://rally1.rallydev.com/#/%sd/detail/defect/%s";
+	public static String DeepLink;
 	String instanceId;
 	String issueType;
 	
@@ -72,10 +73,6 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 	}
 
 	public Bug fileBug(BugSubmission bug, UserAuthenticationStore credentials) {
-	//	IssueDetail issue = bug.getIssueDetail();
-	//	instanceId = issue.getIssueInstanceId();
-		issueType = "Name of the issue";
-		
 		return fileBug(bug.getParams(), credentials);
 				
 			
@@ -88,11 +85,12 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 		
 			connection = getReusableConnection(credentials);
             try {
-            	LOG.error("This is before createNewIssue---------------------------->" +params.values());
+//             	LOG.error("This is before createNewIssue---------------------------->" +params.get(SEVERITY));
 				retval = connection.createNewIssue(configValues.get("Rally_Project"),configValues.get("Rally_WorkSpace"), configValues.get("Rally_DefectSuite"),
-						configValues.get("Rally_API"), configValues.get("Rally_URL"), INSTANCE_ID, params.get(PARAM_DESCRIPTION), "Issue Title");
+						configValues.get("Rally_API"), configValues.get("Rally_URL"), INSTANCE_ID, params.get(PARAM_DESCRIPTION), 
+						params.get(PARAM_SUMMARY), params.get(SEVERITY), params.get("Issue_DeepLink"));
+//				DeepLink = connection.getDeepLink(params.get(PARAM_DESCRIPTION)); 
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				LOG.error("This is logs error for fileBug" +configValues.get("Rally_Workspace"));
 			}
 			if (connection != null) {
@@ -100,9 +98,18 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 			}
 			return retval;
 		}
-		
-	public String getBugDeepLink(String issueID) {
-		return configValues.get("Rally_URL");
+
+
+	public String getBugDeepLink(String rallyDefectID) {
+		String [] tmp1=configValues.get("Rally_Project").split("/");
+		int tmplen=tmp1.length;
+		String rallyProjectId=tmp1[tmplen-1];
+		String[] tmp2=rallyDefectID.split("/");
+		int tmplen1 = tmp2.length;
+		String rallyDId = tmp2[tmplen1-1];
+		rallyDId = rallyDId.replace("\"", " ").trim();
+		String rallyURL=String.format(RALLY_DEFECT_DEEP_LINK_URL_FORMAT,rallyProjectId,rallyDId);
+		return rallyURL;
 	}
 	
 	
@@ -132,7 +139,7 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 					.setDisplayLabel("Bug Description")
 					.setRequired(true);
 			if (issueDetail == null) {
-				descriptionParam = descriptionParam.setValue("Issue Ids: $ATTRIBUTE_INSTANCE_ID$\n$ISSUE_DEEPLINK$");
+				descriptionParam = descriptionParam.setValue("Issue Ids: $ATTRIBUTE_INSTANCE_ID$\n Issue Deep Link: $ISSUE_DEEPLINK$\n Issue Found in file $ATTRIBUTE_FILE$ at line $ATTRIBUTE_LINE$");
 			} else {
 				descriptionParam.setValue(issueDetail.getDescription());
 			}
@@ -144,11 +151,25 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 					.setRequired(true)
 					.setDescription("Issue unique Instance ID");
 			if (issueDetail == null) {
-				instanceID = instanceID.setValue("$ATTRIBUTE_INSTANCE_ID");
+				instanceID = instanceID.setValue("$ATTRIBUTE_INSTANCE_ID$");
 			} else {
-				instanceID = instanceID.setValue("$ATTRIBUTE_INSTANCE_ID");
+				instanceID = instanceID.setValue(issueDetail.getIssueInstanceId());
 			}
 			initialFields.add(instanceID);
+			//ATTRIBUTE_SEVERITY
+			
+			BugParam severity = new BugParamText()
+					.setIdentifier(SEVERITY)
+					.setDisplayLabel("Bug Severity")
+					.setRequired(true)
+					.setDescription("Bug Severity");
+			if (issueDetail == null) {
+				severity = severity.setValue("$ATTRIBUTE_FORTIFY_PRIORITY_ORDER$");
+			} else {
+				severity = severity.setValue("$ATTRIBUTE_FORTIFY_PRIORITY_ORDER$");
+			}
+			initialFields.add(severity);
+			
 			
 			BugParam rallyWorkspace = new BugParamText()
 					.setIdentifier("Rally_Workspace")
@@ -173,7 +194,15 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 					.setDisplayLabel("Rally DefectSuite")
 			        .setValue(configValues.get("Rally_DefectSuite"));
 			initialFields.add(rallyDS);
- 
+			
+			BugParam issueDeepLink = new BugParamText()
+					.setIdentifier("Issue_DeepLink")
+					.setDescription("IssueDeepLink")
+					.setRequired(false)
+					.setDisplayLabel("Issue DeepLink")
+			        .setValue("$ISSUE_DEEPLINK$");
+			initialFields.add(issueDeepLink);
+  
  
 
 		} catch (final Exception e) {
@@ -229,6 +258,8 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 		pluginHelper.populateWithDefaultsIfAvailable(rallyConfigs);
 		return rallyConfigs;
 	}
+	
+	//form this :    https://rally1.rallydev.com/#/57403463432d/detail/defect/88794189604?fdp=true
 
 	public String getLongDisplayName() {
 		// TODO Auto-generated method stub
