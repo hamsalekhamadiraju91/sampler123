@@ -7,12 +7,14 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,6 +31,8 @@ import com.fortify.pub.bugtracker.support.BugTrackerException;
 import com.fortify.pub.bugtracker.support.IssueDetail;
 import com.fortify.pub.bugtracker.support.MultiIssueBugSubmission;
 import com.fortify.pub.bugtracker.support.UserAuthenticationStore;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 
 @BugTrackerPluginImplementation
@@ -71,32 +75,61 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 		}
 		return null;
 	}
-
+	
+	
+	public Bug fileMultiIssueBug(MultiIssueBugSubmission bugs, UserAuthenticationStore credentials) {
+			return fileBug(bugs.getParams(), credentials);
+		}
+	
 	public Bug fileBug(BugSubmission bug, UserAuthenticationStore credentials) {
 		return fileBug(bug.getParams(), credentials);
 				
 			
 	}
+	
+
 
 	private Bug fileBug(Map<String, String> params, UserAuthenticationStore credentials) {
+		String[] values = null;
+		
+		Map<String, String[]> map = new LinkedHashMap< String, String[]>();
+		
+		ArrayList<String> keys = new ArrayList<String>();
+		keys.add(INSTANCE_ID);
+		keys.add(PARAM_DESCRIPTION);
+		keys.add(PARAM_SUMMARY);
+		keys.add("Issue_DeepLink");
+		for(String key:keys){
+			 values = params.get(key).split(",");
+			for(int i=0; i< values.length; i++){
+			   map.put(key, values);
+			}
+		}
 		
 		Bug retval = null;
 		Rally4PluginConnection connection = null;
 		
 			connection = getReusableConnection(credentials);
+			
+				LOG.error("Number of issues to file: " +map.get(keys.get(0)).length);
             try {
-//             	LOG.error("This is before createNewIssue---------------------------->" +params.get(SEVERITY));
-				retval = connection.createNewIssue(configValues.get("Rally_Project"),configValues.get("Rally_WorkSpace"), configValues.get("Rally_DefectSuite"),
-						configValues.get("Rally_API"), configValues.get("Rally_URL"), INSTANCE_ID, params.get(PARAM_DESCRIPTION), 
-						params.get(PARAM_SUMMARY), params.get(SEVERITY), params.get("Issue_DeepLink"));
-//				DeepLink = connection.getDeepLink(params.get(PARAM_DESCRIPTION)); 
-			} catch (Exception e) {
-				LOG.error("This is logs error for fileBug" +configValues.get("Rally_Workspace"));
+            	for(int i = 0; i < map.get(keys.get(0)).length; i++){
+            	 retval = connection.createNewIssue(configValues.get("Rally_Project"),configValues.get("Rally_WorkSpace"), configValues.get("Rally_DefectSuite"),
+  						configValues.get("Rally_API"), configValues.get("Rally_URL"), map.get(keys.get(0))[i], map.get(keys.get(1))[i], 
+  						map.get(keys.get(2))[i], params.get(SEVERITY), map.get(keys.get(3))[i]);
+            	 return retval;
+            	}
+            	
+            	}
+			 catch (Exception e) {
+				LOG.error("This is logs error for fileBug" +e.getMessage());
 			}
 			if (connection != null) {
 				connection.closeRallyConnection();
 			}
-			return retval;
+		
+		return retval;
+
 		}
 
 
@@ -333,32 +366,7 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 		
 	}
 
-	public Bug fileMultiIssueBug(MultiIssueBugSubmission bugs, UserAuthenticationStore credentials) {
-		return fileBug(bugs.getParams(),credentials);
-////		List<IssueDetail> issueList = new ArrayList<IssueDetail>();
-////		issueList = bugs.getIssueDetails();
-////		Bug b = null;
-////		for(IssueDetail eachIssue: issueList){
-////			try {
-////				b = fileBug(eachIssue, credentials);
-////			} catch (IOException e) {
-////				// TODO Auto-generated catch block
-////				e.printStackTrace();
-////			}	
-////		}
-//		Map<String, String> issuesMap;
-//		issuesMap = bugs.getParams();
-//		Bug b = null;
-//	    try {
-//			b = fileBug(issuesMap,credentials);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		
-//		return b;
-			
-	}
+	
 
 	public List<BugParam> getBatchBugParameters(UserAuthenticationStore credentials) {
 		// TODO Auto-generated method stub

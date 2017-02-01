@@ -117,7 +117,7 @@ public class Rally4PluginConnection {
 			LOG.info("Cannot proceed without Rally API Key.");
 
 		}
-		try {
+		try { 
 			LOG.info("Connection ToTry");
 			restApi= new RallyRestApi(new URI(rURL),rAPI);
 			
@@ -162,7 +162,7 @@ public class Rally4PluginConnection {
 		newDefect.addProperty("Workspace", rWorkspace);
 		newDefect.addProperty("Project", rProject);
 		newDefect.addProperty("State", "Open");
-		newDefect.addProperty("ConversationPost", instanceId);
+	//	newDefect.addProperty("ConversationPost", instanceId);
 		CreateRequest createRequest = new CreateRequest("defect", newDefect);
 		CreateResponse createResponse = null;
 		try {
