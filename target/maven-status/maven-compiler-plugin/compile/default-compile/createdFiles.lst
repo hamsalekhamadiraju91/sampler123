@@ -1,1 +1,2 @@
-com/fortify/pub/bugtracker/plugin/RallyPlugin.class
+com/fortify/pub/bugtracker/plugin/Rally4BugTrackerPlugin.class
+com/fortify/pub/bugtracker/plugin/Rally4PluginConnection.class

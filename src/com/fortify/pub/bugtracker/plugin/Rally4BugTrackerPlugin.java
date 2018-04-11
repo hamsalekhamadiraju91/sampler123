@@ -105,7 +105,7 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
 			   map.put(key, values);
 			}
 		}
-		
+		BugSubmission buggy = null ;
 		Bug retval = null;
 		Rally4PluginConnection connection = null;
 		
@@ -117,6 +117,7 @@ public  class Rally4BugTrackerPlugin extends AbstractBugTrackerPlugin implements
             	 retval = connection.createNewIssue(configValues.get("Rally_Project"),configValues.get("Rally_WorkSpace"), configValues.get("Rally_DefectSuite"),
   						configValues.get("Rally_API"), configValues.get("Rally_URL"), map.get(keys.get(0))[i], map.get(keys.get(1))[i], 
   						map.get(keys.get(2))[i], params.get(SEVERITY), map.get(keys.get(3))[i]);
+            	 buggy.setParams(params);
             	 return retval;
             	}
             	
